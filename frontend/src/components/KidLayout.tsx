@@ -12,6 +12,8 @@ import {
 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import MobileNav from "./MobileNav";
+import MobileMenuDrawer from "./MobileMenuDrawer";
+import { useState } from "react";
 
 const kidLinks = [
   { to: "/dashboard", label: "Home", icon: LayoutDashboard, color: "bg-sky-500" },
@@ -39,6 +41,7 @@ export default function KidLayout() {
   const navigate = useNavigate();
   const { pathname } = useLocation();
   const pageTitle = pageTitles[pathname] ?? "Career-Aid Pro";
+  const [menuOpen, setMenuOpen] = useState(false);
 
   const displayName =
     [user?.first_name].filter(Boolean).join(" ") || user?.username || "Explorer";
@@ -155,24 +158,6 @@ export default function KidLayout() {
             </div>
             <span className="font-extrabold" style={{ color: "var(--kid-text-primary)" }}>{pageTitle}</span>
           </div>
-          {user && (
-            <div className="flex items-center gap-2.5">
-              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-sky-500 to-blue-700 text-xs font-bold text-white shadow-sm">
-                {displayName.charAt(0).toUpperCase()}
-              </div>
-              <button
-                type="button"
-                onClick={() => {
-                  logout();
-                  navigate("/login");
-                }}
-                className="flex h-8 w-8 items-center justify-center rounded-xl bg-red-100 text-red-700 transition hover:bg-red-200"
-                title="Sign out"
-              >
-                <LogOut className="h-4 w-4" />
-              </button>
-            </div>
-          )}
         </header>
 
         {/* Desktop Header */}
@@ -193,7 +178,8 @@ export default function KidLayout() {
         </main>
       </div>
 
-      <MobileNav isKid />
+      <MobileNav isKid onMenuToggle={() => setMenuOpen(true)} />
+      <MobileMenuDrawer isOpen={menuOpen} onClose={() => setMenuOpen(false)} isKid={true} />
     </div>
   );
 }
