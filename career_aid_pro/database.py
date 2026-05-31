@@ -39,6 +39,8 @@ def init_db() -> None:
                 gender TEXT,
                 learner_profile TEXT DEFAULT 'general',
                 personality_summary TEXT DEFAULT NULL,
+                reset_token TEXT DEFAULT NULL,
+                reset_token_expires TIMESTAMP DEFAULT NULL,
                 last_login TIMESTAMP,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             );
@@ -65,13 +67,17 @@ def init_db() -> None:
             );
             """
         )
-        # Lightweight migration: add last_login if missing (older DBs)
+        # Lightweight migration: add columns if missing (older DBs)
         cur.execute("PRAGMA table_info(users)")
         cols = {row[1] for row in cur.fetchall()}
         if "last_login" not in cols:
             cur.execute("ALTER TABLE users ADD COLUMN last_login TIMESTAMP")
         if "learner_profile" not in cols:
             cur.execute("ALTER TABLE users ADD COLUMN learner_profile TEXT DEFAULT 'general'")
+        if "reset_token" not in cols:
+            cur.execute("ALTER TABLE users ADD COLUMN reset_token TEXT DEFAULT NULL")
+        if "reset_token_expires" not in cols:
+            cur.execute("ALTER TABLE users ADD COLUMN reset_token_expires TIMESTAMP DEFAULT NULL")
         conn.commit()
     except sqlite3.Error:
         print("Database init error:", file=sys.stderr)
@@ -447,6 +453,63 @@ def get_latest_cv_score(username: str) -> dict[str, Any] | None:
     except sqlite3.Error:
         traceback.print_exc(file=sys.stderr)
         return None
+    finally:
+        if conn:
+            conn.close()
+
+
+def set_reset_token(username: str, token: str, expiry: str) -> bool:
+    conn = None
+    try:
+        conn = get_connection()
+        cur = conn.execute(
+            "UPDATE users SET reset_token = ?, reset_token_expires = ? WHERE username = ?",
+            (token, expiry, username),
+        )
+        conn.commit()
+        return cur.rowcount > 0
+    except sqlite3.Error:
+        traceback.print_exc(file=sys.stderr)
+        return False
+    finally:
+        if conn:
+            conn.close()
+
+
+def get_user_by_reset_token(token: str) -> dict[str, Any] | None:
+    conn = None
+    try:
+        conn = get_connection()
+        row = conn.execute(
+            "SELECT username, password, first_name, last_name, age, gender, "
+            "learner_profile, personality_summary, reset_token_expires, last_login, created_at "
+            "FROM users WHERE reset_token = ?",
+            (token,),
+        ).fetchone()
+        if not row:
+            return None
+        return dict(row)
+    except sqlite3.Error:
+        traceback.print_exc(file=sys.stderr)
+        return None
+    finally:
+        if conn:
+            conn.close()
+
+
+def update_user_password(username: str, hashed_password: str) -> bool:
+    conn = None
+    try:
+        conn = get_connection()
+        cur = conn.execute(
+            "UPDATE users SET password = ?, reset_token = NULL, reset_token_expires = NULL WHERE username = ?",
+            (hashed_password, username),
+        )
+        conn.commit()
+        return cur.rowcount > 0
+    except sqlite3.Error:
+        traceback.print_exc(file=sys.stderr)
+        return False
     finally:
         if conn:
             conn.close()

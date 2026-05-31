@@ -13,6 +13,7 @@ import LoginPage from "./pages/Login";
 import PersonalityPage from "./pages/Personality";
 import RegisterPage from "./pages/Register";
 import SettingsPage from "./pages/Settings";
+import ForgotPasswordPage from "./pages/ForgotPassword";
 
 import AboutPage from "./pages/About";
 import FaqPage from "./pages/Faq";
@@ -45,6 +46,7 @@ export default function App() {
     <Routes>
       <Route path="/login" element={<LoginPage />} />
       <Route path="/register" element={<RegisterPage />} />
+      <Route path="/forgot-password" element={<ForgotPasswordPage />} />
       <Route path="/about" element={<AboutPage />} />
       <Route path="/faq" element={<FaqPage />} />
       <Route

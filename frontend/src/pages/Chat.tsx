@@ -1,6 +1,6 @@
 import { FormEvent, useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { Bot, Briefcase, Download, FileImage, Pencil, RefreshCw, Send, User, X, Heart, Globe, Paperclip, FileText } from "lucide-react";
+import { Bot, Briefcase, Download, FileImage, Pencil, RefreshCw, Send, User, X, Heart, Globe, Paperclip, FileText, ChevronDown, ChevronUp } from "lucide-react";
 import { api, streamChat } from "../api/client";
 import CareerCoachPanel from "../components/chat/CareerCoachPanel";
 import EmptyChat from "../components/EmptyChat";
@@ -36,6 +36,7 @@ export default function ChatPage() {
   const [editingTurn, setEditingTurn] = useState<number | null>(null);
   const [selectedFile, setSelectedFile] = useState<{ base64: string; mimeType: string; name: string } | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [sessionMenuOpen, setSessionMenuOpen] = useState(false);
   const [fileBusy, setFileBusy] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
@@ -201,8 +202,9 @@ export default function ChatPage() {
 
   return (
     <motion.div className="flex h-full min-h-0 flex-1 flex-col">
+      {/* Desktop Mode Selector Header */}
       <header
-        className="shrink-0 border-b px-4 py-4 md:px-6"
+        className="shrink-0 border-b px-4 py-4 md:px-6 hidden md:block"
         style={{ borderColor: "var(--border-subtle)", background: "var(--bg-elevated)" }}
       >
         <p className="label-caps mb-3 text-center md:text-left">Session mode</p>
@@ -244,6 +246,99 @@ export default function ChatPage() {
             Open Chat
           </button>
         </div>
+      </header>
+
+      {/* Mobile Collapsible Mode Selector Header */}
+      <header
+        className="shrink-0 border-b border-white/5 bg-[#0d0d12]/95 px-4 py-3 md:hidden z-20"
+      >
+        <button
+          type="button"
+          onClick={() => setSessionMenuOpen(!sessionMenuOpen)}
+          className="flex w-full items-center justify-between rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm font-semibold text-white shadow-sm"
+        >
+          <div className="flex items-center gap-2">
+            <span className="text-slate-400 font-medium">Session:</span>
+            {mode === "Career Coach" && (
+              <span className="flex items-center gap-1.5 text-emerald-400">
+                <Briefcase className="h-4 w-4" /> Career Coach
+              </span>
+            )}
+            {mode === "Mental Health" && (
+              <span className="flex items-center gap-1.5 text-pink-400">
+                <Heart className="h-4 w-4" /> Mental Wellness
+              </span>
+            )}
+            {mode === "free" && (
+              <span className="flex items-center gap-1.5 text-indigo-400">
+                <Globe className="h-4 w-4" /> Open Chat
+              </span>
+            )}
+          </div>
+          {sessionMenuOpen ? (
+            <ChevronUp className="h-4 w-4 text-slate-400" />
+          ) : (
+            <ChevronDown className="h-4 w-4 text-slate-400" />
+          )}
+        </button>
+
+        <AnimatePresence>
+          {sessionMenuOpen && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              exit={{ opacity: 0, height: 0 }}
+              transition={{ duration: 0.15 }}
+              className="mt-3 flex flex-col gap-2 overflow-hidden"
+            >
+              <button
+                type="button"
+                onClick={() => {
+                  setMode("Career Coach");
+                  setSessionMenuOpen(false);
+                }}
+                className={`flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-medium transition-all ${
+                  mode === "Career Coach"
+                    ? "bg-gradient-to-r from-emerald-500 to-teal-600 text-white shadow-glow-sm"
+                    : "border border-white/10 bg-white/5 text-slate-300 hover:bg-emerald-500/20 hover:text-emerald-300"
+                }`}
+              >
+                <Briefcase className="h-4 w-4" />
+                Career Coach
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setMode("Mental Health");
+                  setSessionMenuOpen(false);
+                }}
+                className={`flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-medium transition-all ${
+                  mode === "Mental Health"
+                    ? "bg-gradient-to-r from-pink-500 to-rose-600 text-white shadow-glow-sm"
+                    : "border border-white/10 bg-white/5 text-slate-300 hover:bg-pink-500/20 hover:text-pink-300"
+                }`}
+              >
+                <Heart className="h-4 w-4" />
+                Mental Wellness
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setMode("free");
+                  setSessionMenuOpen(false);
+                }}
+                className={`flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-medium transition-all ${
+                  mode === "free"
+                    ? "bg-gradient-to-r from-indigo-500 to-purple-600 text-white shadow-glow-sm"
+                    : "border border-white/10 bg-white/5 text-slate-300 hover:bg-indigo-500/20 hover:text-indigo-300"
+                }`}
+              >
+                <Globe className="h-4 w-4" />
+                Open Chat
+              </button>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </header>
 
       {mode === "Career Coach" && (

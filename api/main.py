@@ -19,7 +19,7 @@ from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
-from api.routers import artifacts, auth, chat, chats, cv, cv_builder, personality, users, document
+from api.routers import artifacts, auth, chat, chats, cv, cv_builder, personality, users, document, recovery
 from api.routers import cv_analyzer
 from api.schemas import HealthResponse
 
@@ -232,6 +232,7 @@ async def global_exception_handler(request: Request, exc: Exception):
 
 # Include routers
 app.include_router(auth.router, prefix="/api")
+app.include_router(recovery.router, prefix="/api")
 app.include_router(users.router, prefix="/api")
 app.include_router(chats.router, prefix="/api")
 app.include_router(chat.router, prefix="/api")
