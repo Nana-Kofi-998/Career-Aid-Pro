@@ -237,37 +237,26 @@ from fastapi.responses import FileResponse
 
 frontend_dist = os.path.join(_ROOT, "frontend", "dist")
 
-# Mount assets directory directly for JS and CSS files
-assets_dir = os.path.join(frontend_dist, "assets")
-if os.path.exists(assets_dir):
-    app.mount("/assets", StaticFiles(directory=assets_dir), name="assets")
-
-@app.get("/{catchall:path}")
-async def serve_spa(catchall: str):
-    """
-    Catch-all route that serves static files in the build root (like favicons)
-    or falls back to index.html for React SPA client-side routing.
-    """
-    # Let missing /api endpoints raise a normal 404
-    if catchall.startswith("api"):
-        raise HTTPException(status_code=404, detail="Not Found")
-
-    # If it is a real file in the dist directory (e.g. favicon.png), serve it
-    file_path = os.path.join(frontend_dist, catchall)
-    if catchall and os.path.isfile(file_path):
-        return FileResponse(file_path)
-
-    # Fallback to React index.html
+# Register a custom 404 handler to handle SPA client-side routing
+@app.exception_handler(404)
+async def spa_404_handler(request: Request, exc: HTTPException):
+    # If the error is on an API route, return standard JSON 404
+    if request.url.path.startswith("/api"):
+        return JSONResponse(
+            status_code=404,
+            content={"detail": "Not Found", "request_id": getattr(request.state, "request_id", "unknown")}
+        )
+    
+    # Otherwise, fall back to index.html for React SPA
     index_path = os.path.join(frontend_dist, "index.html")
     if os.path.exists(index_path):
         return FileResponse(index_path)
+    
+    return JSONResponse(status_code=404, content={"detail": "Not Found"})
 
-    # If frontend build doesn't exist, return default API JSON
-    return {
-        "name": "Career-Aid Pro API",
-        "version": "1.0.0",
-        "docs": "/docs",
-        "health": "/api/health"
-    }
+# Mount the static files at the root so they are served directly with correct MIME types
+if os.path.exists(frontend_dist):
+    app.mount("/", StaticFiles(directory=frontend_dist, html=True), name="frontend")
+
 
 
