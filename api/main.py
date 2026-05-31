@@ -181,6 +181,45 @@ async def http_exception_handler(request: Request, exc: HTTPException):
     )
 
 
+from fastapi.exceptions import RequestValidationError
+
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(request: Request, exc: RequestValidationError):
+    """Format Pydantic schema validation errors into human-readable sentences."""
+    errors = exc.errors()
+    if errors:
+        err = errors[0]
+        # Get the field name (e.g. "username")
+        field = str(err.get("loc", ["field"])[-1])
+        # Clean up field name for UI (e.g., "first_name" -> "First name")
+        field_display = field.replace("_", " ").capitalize()
+        
+        # Check specific validation conditions
+        msg = err.get("msg", "Invalid input")
+        
+        if "at least 3 characters" in msg:
+            detail = f"{field_display} must be at least 3 characters long."
+        elif "at least 8 characters" in msg:
+            detail = f"{field_display} must be at least 8 characters long."
+        elif "at most" in msg:
+            detail = f"{field_display} is too long."
+        elif "value is not a valid integer" in msg:
+            detail = f"Please enter a valid number for {field_display.lower()}."
+        else:
+            detail = f"{field_display}: {msg}."
+    else:
+        detail = "Please check your inputs and try again."
+
+    return JSONResponse(
+        status_code=422,
+        content={
+            "detail": detail,
+            "request_id": getattr(request.state, "request_id", "unknown"),
+        },
+    )
+
+
+
 @app.exception_handler(Exception)
 async def global_exception_handler(request: Request, exc: Exception):
     """Global exception handler for unhandled errors."""

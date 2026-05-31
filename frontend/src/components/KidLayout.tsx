@@ -155,6 +155,24 @@ export default function KidLayout() {
             </div>
             <span className="font-extrabold" style={{ color: "var(--kid-text-primary)" }}>{pageTitle}</span>
           </div>
+          {user && (
+            <div className="flex items-center gap-2.5">
+              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-sky-500 to-blue-700 text-xs font-bold text-white shadow-sm">
+                {displayName.charAt(0).toUpperCase()}
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  logout();
+                  navigate("/login");
+                }}
+                className="flex h-8 w-8 items-center justify-center rounded-xl bg-red-100 text-red-700 transition hover:bg-red-200"
+                title="Sign out"
+              >
+                <LogOut className="h-4 w-4" />
+              </button>
+            </div>
+          )}
         </header>
 
         {/* Desktop Header */}
