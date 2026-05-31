@@ -232,33 +232,42 @@ def health() -> HealthResponse:
     )
 
 
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
+
 frontend_dist = os.path.join(_ROOT, "frontend", "dist")
 
-if not os.path.exists(frontend_dist):
-    @app.get("/")
-    def root():
-        """Root endpoint with API information."""
-        return {
-            "name": "Career-Aid Pro API",
-            "version": "1.0.0",
-            "docs": "/docs",
-            "health": "/api/health"
-        }
-else:
-    from fastapi.staticfiles import StaticFiles
-    from fastapi.responses import FileResponse
+# Mount assets directory directly for JS and CSS files
+assets_dir = os.path.join(frontend_dist, "assets")
+if os.path.exists(assets_dir):
+    app.mount("/assets", StaticFiles(directory=assets_dir), name="assets")
 
-    class SPAStaticFiles(StaticFiles):
-        async def get_response(self, path: str, scope):
-            try:
-                response = await super().get_response(path, scope)
-                return response
-            except (HTTPException, Exception):
-                index_path = os.path.join(frontend_dist, "index.html")
-                if os.path.exists(index_path):
-                    return FileResponse(index_path)
-                raise
+@app.get("/{catchall:path}")
+async def serve_spa(catchall: str):
+    """
+    Catch-all route that serves static files in the build root (like favicons)
+    or falls back to index.html for React SPA client-side routing.
+    """
+    # Let missing /api endpoints raise a normal 404
+    if catchall.startswith("api"):
+        raise HTTPException(status_code=404, detail="Not Found")
 
-    logger.info("Serving frontend static assets from %s", frontend_dist)
-    app.mount("/", SPAStaticFiles(directory=frontend_dist, html=True), name="frontend")
+    # If it is a real file in the dist directory (e.g. favicon.png), serve it
+    file_path = os.path.join(frontend_dist, catchall)
+    if catchall and os.path.isfile(file_path):
+        return FileResponse(file_path)
+
+    # Fallback to React index.html
+    index_path = os.path.join(frontend_dist, "index.html")
+    if os.path.exists(index_path):
+        return FileResponse(index_path)
+
+    # If frontend build doesn't exist, return default API JSON
+    return {
+        "name": "Career-Aid Pro API",
+        "version": "1.0.0",
+        "docs": "/docs",
+        "health": "/api/health"
+    }
+
 
