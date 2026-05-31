@@ -27,9 +27,9 @@ MODELS = {
 
 def _offline_response(mode: str, prompt: str) -> str:
     return (
-        "I am using preview guidance while the hosted AI service reconnects.\n\n"
+        "Our AI service is currently undergoing scheduled maintenance.\n\n"
         f"{get_demo_response(mode, prompt)}\n\n"
-        "You can keep working now; the app will use the live AI service again as soon as it is reachable."
+        "We are working to bring the live service back online as quickly as possible. You can continue exploring using our offline preview guidance in the meantime!"
     )
 
 
