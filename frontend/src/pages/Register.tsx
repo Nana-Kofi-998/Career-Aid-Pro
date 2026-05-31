@@ -7,8 +7,10 @@ import { useAuth } from "../context/AuthContext";
 import { learnerProfileOptions } from "../utils/productJourney";
 import type { LearnerProfile } from "../types";
 
+import { useEffect } from "react";
+
 export default function RegisterPage() {
-  const { register } = useAuth();
+  const { user, register } = useAuth();
   const navigate = useNavigate();
   const [form, setForm] = useState({
     username: "",
@@ -22,6 +24,13 @@ export default function RegisterPage() {
   });
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
+
+  // Automatically navigate to onboarding once registration succeeds and user state is loaded
+  useEffect(() => {
+    if (user) {
+      navigate("/onboarding");
+    }
+  }, [user, navigate]);
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
@@ -41,10 +50,9 @@ export default function RegisterPage() {
         gender: form.gender,
         learner_profile: form.learner_profile,
       });
-      navigate("/onboarding");
+      // Let the useEffect handle the navigation safely
     } catch (err) {
       setError(err instanceof Error ? err.message : "Registration failed");
-    } finally {
       setBusy(false);
     }
   }

@@ -5,13 +5,22 @@ import { Lock, LogIn, User } from "lucide-react";
 import AuthShell from "../components/AuthShell";
 import { useAuth } from "../context/AuthContext";
 
+import { useEffect } from "react";
+
 export default function LoginPage() {
-  const { login } = useAuth();
+  const { user, login } = useAuth();
   const navigate = useNavigate();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
+
+  // Automatically navigate to dashboard once user state is loaded/authenticated
+  useEffect(() => {
+    if (user) {
+      navigate("/dashboard");
+    }
+  }, [user, navigate]);
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
@@ -19,10 +28,9 @@ export default function LoginPage() {
     setBusy(true);
     try {
       await login(username.trim(), password);
-      navigate("/dashboard");
+      // Let the useEffect handle the navigation safely
     } catch (err) {
       setError(err instanceof Error ? err.message : "Login failed");
-    } finally {
       setBusy(false);
     }
   }
