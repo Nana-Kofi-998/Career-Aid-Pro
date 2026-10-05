@@ -143,10 +143,12 @@ The UI uses a polished, responsive design system with:
 - Monitor `/api/health` for application and AI service availability.
 - Review logs for failed uploads, authentication spikes, and AI service interruptions.
 - Keep dependencies updated and run frontend and backend checks before release.
-
+- Project still in development so depending on when you open this, you may or may not see the full work
 ## License
 
-MIT License.
+
+
+
 
 ## Credits
 
